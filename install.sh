@@ -26,6 +26,13 @@ PUBLIC_ORIGIN="${SPRECHFUNK_ORIGIN:-}"
 DO_START=1
 INSTALL_DOCKER=0
 
+# Track whether port/bind/tag were set explicitly (flag or env). If not, an
+# update reuses the values already stored in .env instead of resetting them.
+PORT_SET=0; BIND_SET=0; TAG_SET=0
+[ -n "${SPRECHFUNK_PORT:-}" ] && PORT_SET=1
+[ -n "${SPRECHFUNK_BIND:-}" ] && BIND_SET=1
+[ -n "${SPRECHFUNK_TAG:-}" ]  && TAG_SET=1
+
 RAW_BASE="https://raw.githubusercontent.com/FelixLenz-Code/sprechfunk/main"
 
 # ---------------------------------------------------------------------------
@@ -74,9 +81,9 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --domain) PUBLIC_ORIGIN="$2"; shift 2 ;;
     --dir)    DIR="$2"; shift 2 ;;
-    --port)   HOST_PORT="$2"; shift 2 ;;
-    --bind)   BIND_ADDR="$2"; shift 2 ;;
-    --tag)    TAG="$2"; shift 2 ;;
+    --port)   HOST_PORT="$2"; PORT_SET=1; shift 2 ;;
+    --bind)   BIND_ADDR="$2"; BIND_SET=1; shift 2 ;;
+    --tag)    TAG="$2"; TAG_SET=1; shift 2 ;;
     --install-docker) INSTALL_DOCKER=1; shift ;;
     --no-start) DO_START=0; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -201,6 +208,11 @@ if [ -z "$JWT_SECRET" ] || [ -z "$MEDIA_ENCRYPTION_KEY" ]; then SECRET_STATE="ne
 [ -n "$JWT_SECRET" ]           || JWT_SECRET="$(gen_secret)"
 [ -n "$MEDIA_ENCRYPTION_KEY" ] || MEDIA_ENCRYPTION_KEY="$(gen_secret)"
 
+# --- Preserve port / bind / tag across updates unless explicitly overridden ---
+if [ "$PORT_SET" -eq 0 ]; then ev="$(get_env_var HOST_PORT)"; [ -n "$ev" ] && HOST_PORT="$ev"; fi
+if [ "$BIND_SET" -eq 0 ]; then ev="$(get_env_var BIND_ADDR)"; [ -n "$ev" ] && BIND_ADDR="$ev"; fi
+if [ "$TAG_SET" -eq 0 ]; then ev="$(get_env_var IMAGE)"; [ -n "$ev" ] && TAG="${ev##*:}"; fi
+
 # --- PUBLIC_ORIGIN (optional, informational) ---
 # The app derives its API/WebSocket URLs from the browser's own location, so it
 # works behind any reverse proxy without knowing its public domain. This value
@@ -311,6 +323,15 @@ ${C_DIM}Nächste Schritte:${C_RESET}
 ${C_DIM}Verwaltung:${C_RESET}
   Logs:        cd $DIR && $COMPOSE logs -f
   Neustart:    cd $DIR && $COMPOSE restart
-  Update:      diesen Installer erneut ausführen (Secrets bleiben erhalten)
+  Update:      diesen Installer erneut ausführen (Einstellungen bleiben erhalten)
   Stoppen:     cd $DIR && $COMPOSE down
 EOF
+
+# Security note when the port is exposed beyond localhost.
+if [ "$BIND_ADDR" = "0.0.0.0" ]; then
+  echo
+  warn "Port ${HOST_PORT} ist an ALLE Interfaces (0.0.0.0) gebunden — im Klartext (kein TLS)."
+  warn "Docker umgeht oft die Host-Firewall (UFW). Empfehlung:"
+  warn "  • Statt 0.0.0.0 die konkrete interne IP binden: --bind <interne-IP-des-Servers>"
+  warn "  • oder den Zugriff auf ${HOST_PORT} per Firewall auf die Reverse-Proxy-IP beschränken."
+fi

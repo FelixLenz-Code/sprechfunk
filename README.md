@@ -61,8 +61,22 @@ curl -fsSL .../install.sh | bash -s -- \
   --install-docker             # Docker automatisch installieren, falls es fehlt
 ```
 
-**Updaten** = denselben Befehl erneut ausführen. Die Secrets in `.env` bleiben dabei erhalten,
-nur das Image wird aktualisiert und der Container neu gestartet.
+**Updaten** = denselben Befehl erneut ausführen. Secrets **und** deine Einstellungen (`--port`,
+`--bind`, `--tag`, Domain) bleiben aus der `.env` erhalten; nur das Image wird aktualisiert und der
+Container neu gestartet.
+
+> **Reverse Proxy auf einem anderen Rechner?** Standardmäßig bindet der Server nur an `127.0.0.1`
+> (nur lokal erreichbar). Läuft dein Proxy auf einem anderen Host, binde an die erreichbare Adresse:
+>
+> ```bash
+> curl -fsSL .../install.sh | bash -s -- --bind 0.0.0.0
+> # sicherer: die konkrete interne IP statt aller Interfaces
+> curl -fsSL .../install.sh | bash -s -- --bind 10.0.0.5
+> ```
+>
+> ⚠️ Der App-Port läuft im **Klartext** (kein TLS – das macht der Proxy). Docker umgeht oft die
+> Host-Firewall (UFW), daher: entweder an die konkrete interne IP binden **oder** den Port per
+> Firewall auf die Reverse-Proxy-IP beschränken.
 
 <details>
 <summary>Alternativ: manuell mit git clone + docker compose</summary>
