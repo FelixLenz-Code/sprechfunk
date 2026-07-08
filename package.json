@@ -1,0 +1,24 @@
+{
+  "name": "sprechfunk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted PWA push-to-talk voice & text chat",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm --workspace client run build && npm --workspace server run build",
+    "typecheck": "npm --workspace server run typecheck && npm --workspace client run typecheck",
+    "start": "node server/dist/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

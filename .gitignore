@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.env
+.env.local
+data/
+*.sqlite
+*.sqlite-*
+.DS_Store
+coverage/
+
+# Claude Code local settings
+.claude/
+*.tsbuildinfo

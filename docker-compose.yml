@@ -1,0 +1,24 @@
+services:
+  sprechfunk:
+    # Pull the prebuilt image from GitHub Container Registry (built by CI).
+    # Replace the owner/name if you forked the repo.
+    image: ghcr.io/felixlenz-code/sprechfunk:latest
+    # To build locally instead, comment out `image:` above and uncomment:
+    # build: .
+    container_name: sprechfunk
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DATA_DIR: /app/data
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8080}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - see .env.example}
+      MEDIA_ENCRYPTION_KEY: ${MEDIA_ENCRYPTION_KEY:?MEDIA_ENCRYPTION_KEY is required - see .env.example}
+    volumes:
+      - sprechfunk-data:/app/data
+    ports:
+      # Expose only to localhost; your reverse proxy (Caddy/Nginx/Traefik)
+      # terminates TLS and forwards to this port.
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  sprechfunk-data:
