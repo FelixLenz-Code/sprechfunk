@@ -51,7 +51,9 @@ Sprechfunk Installer / Updater
 Verwendung: install.sh [Optionen]
 
 Optionen:
-  --domain <host>     Öffentliche URL, z. B. talk.example.com (setzt PUBLIC_ORIGIN=https://<host>)
+  --domain <host>     Optional. Öffentliche URL (setzt PUBLIC_ORIGIN=https://<host>).
+                      Nicht nötig für den Betrieb – die App erkennt ihre Domain
+                      selbst über den Browser/Reverse-Proxy; rein informativ.
   --dir <pfad>        Installationsverzeichnis (Default: $DIR)
   --port <port>       Host-Port, an den gebunden wird (Default: $HOST_PORT)
   --bind <addr>       Bind-Adresse (Default: $BIND_ADDR; 0.0.0.0 = alle Interfaces)
@@ -199,18 +201,14 @@ if [ -z "$JWT_SECRET" ] || [ -z "$MEDIA_ENCRYPTION_KEY" ]; then SECRET_STATE="ne
 [ -n "$JWT_SECRET" ]           || JWT_SECRET="$(gen_secret)"
 [ -n "$MEDIA_ENCRYPTION_KEY" ] || MEDIA_ENCRYPTION_KEY="$(gen_secret)"
 
-# --- PUBLIC_ORIGIN: keep existing unless a new one was provided ---
+# --- PUBLIC_ORIGIN (optional, informational) ---
+# The app derives its API/WebSocket URLs from the browser's own location, so it
+# works behind any reverse proxy without knowing its public domain. This value
+# is not required; we keep an existing one, honour --domain if given, else use a
+# sensible default. No interactive prompt.
 EXISTING_ORIGIN="$(get_env_var PUBLIC_ORIGIN)"
 if [ -z "$PUBLIC_ORIGIN" ]; then
-  if [ -n "$EXISTING_ORIGIN" ]; then
-    PUBLIC_ORIGIN="$EXISTING_ORIGIN"
-  elif [ -r /dev/tty ]; then
-    printf '%sÖffentliche URL (z. B. https://talk.example.com) [Enter = http://localhost:%s]:%s ' \
-      "$C_YELLOW" "$HOST_PORT" "$C_RESET" > /dev/tty
-    read -r PUBLIC_ORIGIN < /dev/tty || PUBLIC_ORIGIN=""
-    if [ -n "$PUBLIC_ORIGIN" ] && [[ "$PUBLIC_ORIGIN" != http* ]]; then PUBLIC_ORIGIN="https://$PUBLIC_ORIGIN"; fi
-  fi
-  [ -n "$PUBLIC_ORIGIN" ] || PUBLIC_ORIGIN="http://localhost:${HOST_PORT}"
+  PUBLIC_ORIGIN="${EXISTING_ORIGIN:-http://localhost:${HOST_PORT}}"
 fi
 
 # --- Write .env (secrets kept, other values refreshed) ---

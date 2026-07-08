@@ -41,18 +41,18 @@ Voraussetzung: Docker mit Compose-Plugin und ein Reverse Proxy (Caddy/Nginx/Trae
 (Fehlt Docker, installiert es der Installer auf Wunsch mit.)
 
 **Der Installer erledigt alles** – installieren **oder** aktualisieren (bei vorhandener Installation),
-Secrets erzeugen bzw. **beim Update erhalten**, Image ziehen, starten, Health-Check:
+Secrets erzeugen bzw. **beim Update erhalten**, Image ziehen, starten, Health-Check. Läuft ohne
+Rückfragen durch:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/FelixLenz-Code/sprechfunk/main/install.sh \
-  | bash -s -- --domain talk.example.com
+curl -fsSL https://raw.githubusercontent.com/FelixLenz-Code/sprechfunk/main/install.sh | bash
 ```
 
-Ohne Argumente fragt der Installer interaktiv nach der Domain. Weitere Optionen:
+> Eine Domain musst du **nicht** angeben – die App erkennt ihren öffentlichen Host automatisch über
+> den Browser/Reverse-Proxy. Optionale Anpassungen:
 
 ```bash
 curl -fsSL .../install.sh | bash -s -- \
-  --domain talk.example.com \  # öffentliche URL (→ PUBLIC_ORIGIN)
   --dir /opt/sprechfunk \      # Installationsverzeichnis
   --port 8080 \                # Host-Port
   --bind 127.0.0.1 \           # Bind-Adresse (0.0.0.0 = alle Interfaces)
