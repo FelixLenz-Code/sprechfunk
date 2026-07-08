@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import './db.js'; // initialise database on boot
+import { startCleanupScheduler } from './cleanup.js';
 import { authRoutes } from './routes/auth.js';
 import { apiRoutes } from './routes/api.js';
 import { handleMessage, registerConnection, unregisterConnection } from './ws/hub.js';
@@ -86,6 +87,10 @@ app.get('/healthz', async () => ({ ok: true }));
 try {
   await app.listen({ port: config.port, host: config.host });
   app.log.info(`Sprechfunk server listening on ${config.host}:${config.port}`);
+  startCleanupScheduler((msg) => app.log.info(msg));
+  app.log.info(
+    `cleanup scheduler active (retention ${config.voiceRetentionDays}d, every ${config.cleanupIntervalHours}h)`,
+  );
 } catch (err) {
   app.log.error(err);
   process.exit(1);

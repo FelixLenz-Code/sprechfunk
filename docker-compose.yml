@@ -13,6 +13,9 @@ services:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8080}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - see .env.example}
       MEDIA_ENCRYPTION_KEY: ${MEDIA_ENCRYPTION_KEY:?MEDIA_ENCRYPTION_KEY is required - see .env.example}
+      # Voice messages older than this are auto-deleted; orphan files are cleaned too.
+      VOICE_RETENTION_DAYS: ${VOICE_RETENTION_DAYS:-365}
+      CLEANUP_INTERVAL_HOURS: ${CLEANUP_INTERVAL_HOURS:-24}
     volumes:
       - sprechfunk-data:/app/data
     ports:

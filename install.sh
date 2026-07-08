@@ -239,6 +239,8 @@ services:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8080}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET missing in .env}
       MEDIA_ENCRYPTION_KEY: ${MEDIA_ENCRYPTION_KEY:?MEDIA_ENCRYPTION_KEY missing in .env}
+      VOICE_RETENTION_DAYS: ${VOICE_RETENTION_DAYS:-365}
+      CLEANUP_INTERVAL_HOURS: ${CLEANUP_INTERVAL_HOURS:-24}
     volumes:
       - sprechfunk-data:/app/data
     ports:

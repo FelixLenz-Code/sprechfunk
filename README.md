@@ -19,6 +19,7 @@ Einzel- und Gruppengespräche – bandbreitenschonend und hinter deinem Reverse 
 - 🛡️ **Admin** kann Registrierung neuer Nutzer deaktivieren und Nutzer verwalten
 - 📱 **PWA** – installierbar, offline-fähige Oberfläche
 - 🔒 Sprachnachrichten werden **verschlüsselt gespeichert** (AES-256-GCM at rest)
+- 🧹 **Automatische Aufräumung**: Sprachnachrichten werden nach 1 Jahr gelöscht, verwaiste Audiodateien ebenfalls (konfigurierbar)
 
 ## 🏗️ Architektur
 
@@ -159,7 +160,9 @@ Lokal mit Docker bauen statt Image ziehen: in `docker-compose.yml` die `image:`-
 | `DATA_DIR` | Ablage für SQLite-DB & Audio-Blobs | `/app/data` |
 | `JWT_SECRET` | Signatur der Sitzungstoken (**pflicht in Prod**) | – |
 | `MEDIA_ENCRYPTION_KEY` | Schlüssel für Audio-Verschlüsselung at rest (**pflicht in Prod**) | – |
-| `PUBLIC_ORIGIN` | öffentliche URL der App | `http://localhost:8080` |
+| `PUBLIC_ORIGIN` | öffentliche URL der App (aktuell nur informativ) | `http://localhost:8080` |
+| `VOICE_RETENTION_DAYS` | Sprachnachrichten älter als X Tage werden gelöscht (0 = nie) | `365` |
+| `CLEANUP_INTERVAL_HOURS` | Intervall des Aufräum-Jobs | `24` |
 
 Beide Secrets mit `openssl rand -hex 32` erzeugen.
 
@@ -168,6 +171,8 @@ Beide Secrets mit `openssl rand -hex 32` erzeugen.
 - **Transportverschlüsselung** via HTTPS/WSS am Reverse Proxy (End-to-End zwischen Browser und Server).
 - **Passwörter**: Argon2id-Hashing.
 - **Sprachnachrichten**: at rest mit AES-256-GCM verschlüsselt.
+- **Datensparsamkeit**: Sprachnachrichten werden nach `VOICE_RETENTION_DAYS` (Default 365) automatisch
+  gelöscht; verwaiste Audiodateien (z. B. nach Nutzer-/Gruppenlöschung) werden vom Aufräum-Job entfernt.
 - **Registrierung**: vom Admin abschaltbar; erster registrierter Account wird Admin.
 
 **Bewusste PoC-Grenzen:**

@@ -33,4 +33,8 @@ export const config = {
   mediaKeyHex: required('MEDIA_ENCRYPTION_KEY', devFallback),
   publicOrigin: process.env.PUBLIC_ORIGIN ?? 'http://localhost:8080',
   isProd: process.env.NODE_ENV === 'production',
+  // Voice messages older than this are automatically deleted (default 1 year).
+  voiceRetentionDays: Math.max(0, Number(process.env.VOICE_RETENTION_DAYS ?? 365)),
+  // How often the cleanup job runs.
+  cleanupIntervalHours: Math.max(1, Number(process.env.CLEANUP_INTERVAL_HOURS ?? 24)),
 } as const;
