@@ -88,6 +88,16 @@ export const api = {
   deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/api/admin/users/${id}`),
 };
 
+/** Fetch a voice message's raw (decrypted) bytes for Web Audio decoding. */
+export async function fetchAudioBuffer(messageId: string): Promise<ArrayBuffer> {
+  const token = getToken();
+  const res = await fetch(`/api/messages/${messageId}/audio`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError('Audio konnte nicht geladen werden', res.status);
+  return res.arrayBuffer();
+}
+
 /** Fetch a voice message as a playable object URL (with auth header). */
 export async function fetchAudioUrl(messageId: string): Promise<string> {
   const token = getToken();

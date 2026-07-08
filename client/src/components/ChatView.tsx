@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, fetchAudioUrl } from '../api';
+import { api, fetchAudioBuffer, fetchAudioUrl } from '../api';
 import { realtime } from '../realtime';
+import { playArrayBuffer, resumeAudio, unlockAudio } from '../audio';
 import type { ConversationSummary, Message, PublicUser } from '../types';
 import { convTitle, formatDuration, formatTime, initials, otherMember } from './util';
 
@@ -165,24 +166,49 @@ function MessageBubble({ m, mine, isGroup }: { m: Message; mine: boolean; isGrou
 }
 
 function VoiceMessage({ m }: { m: Message }) {
-  const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const handleRef = useRef<{ stop(): void } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const stop = () => {
+    handleRef.current?.stop();
+    handleRef.current = null;
+    audioRef.current?.pause();
+    setPlaying(false);
+  };
+
   const play = async () => {
-    if (url) {
-      audioRef.current?.play();
+    if (playing) {
+      stop();
       return;
     }
+    // Resume the shared context *synchronously* inside the click gesture so the
+    // subsequent (post-await) playback isn't blocked by the autoplay policy.
+    unlockAudio();
+    resumeAudio();
     setLoading(true);
     try {
-      const u = await fetchAudioUrl(m.id);
-      setUrl(u);
-      const audio = new Audio(u);
-      audioRef.current = audio;
-      await audio.play();
+      const data = await fetchAudioBuffer(m.id);
+      handleRef.current = await playArrayBuffer(data, () => {
+        handleRef.current = null;
+        setPlaying(false);
+      });
+      setPlaying(true);
     } catch {
-      /* ignore */
+      // Fallback: plain <audio> element (e.g. Web Audio can't decode this codec).
+      // Don't await play() — for undecodable media its promise may never settle,
+      // which would leave the button stuck in the loading state.
+      try {
+        const url = await fetchAudioUrl(m.id);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.addEventListener('ended', () => setPlaying(false));
+        audio.addEventListener('error', () => setPlaying(false));
+        audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      } catch {
+        /* ignore */
+      }
     } finally {
       setLoading(false);
     }
@@ -190,7 +216,9 @@ function VoiceMessage({ m }: { m: Message }) {
 
   return (
     <div className="voice">
-      <button onClick={play} title="Abspielen">{loading ? '…' : '▶'}</button>
+      <button onClick={play} title={playing ? 'Stopp' : 'Abspielen'}>
+        {loading ? '…' : playing ? '⏸' : '▶'}
+      </button>
       <span>Sprachnachricht {formatDuration(m.duration_ms)}</span>
     </div>
   );

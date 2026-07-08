@@ -10,9 +10,12 @@ export function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Unlock audio playback on first interaction (autoplay policy).
+    // Unlock/keep-alive audio playback on user interaction (autoplay policy).
+    // Not `once`: the shared context can be suspended again by the browser, so
+    // we re-resume it on every gesture to keep incoming streams audible.
     const unlock = () => unlockAudio();
-    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
 
     if (!getToken()) {
       setLoading(false);
@@ -24,7 +27,10 @@ export function App() {
       .catch(() => clearToken())
       .finally(() => setLoading(false));
 
-    return () => window.removeEventListener('pointerdown', unlock);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
   }, []);
 
   const handleAuth = (token: string, u: PublicUser) => {
