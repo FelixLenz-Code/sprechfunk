@@ -56,7 +56,7 @@ curl -fsSL https://raw.githubusercontent.com/FelixLenz-Code/sprechfunk/main/inst
 curl -fsSL .../install.sh | bash -s -- \
   --dir /opt/sprechfunk \      # Installationsverzeichnis
   --port 8080 \                # Host-Port
-  --bind 127.0.0.1 \           # Bind-Adresse (0.0.0.0 = alle Interfaces)
+  --bind 0.0.0.0 \             # Bind-Adresse (Default alle Interfaces; 127.0.0.1 = nur lokal)
   --tag latest \               # Image-Tag
   --install-docker             # Docker automatisch installieren, falls es fehlt
 ```
@@ -65,18 +65,17 @@ curl -fsSL .../install.sh | bash -s -- \
 `--bind`, `--tag`, Domain) bleiben aus der `.env` erhalten; nur das Image wird aktualisiert und der
 Container neu gestartet.
 
-> **Reverse Proxy auf einem anderen Rechner?** Standardmäßig bindet der Server nur an `127.0.0.1`
-> (nur lokal erreichbar). Läuft dein Proxy auf einem anderen Host, binde an die erreichbare Adresse:
+> **Bindung:** Standardmäßig bindet der Server an `0.0.0.0` (alle Interfaces), damit ein Reverse
+> Proxy auf einem **anderen** Rechner ihn erreicht.
 >
 > ```bash
-> curl -fsSL .../install.sh | bash -s -- --bind 0.0.0.0
-> # sicherer: die konkrete interne IP statt aller Interfaces
-> curl -fsSL .../install.sh | bash -s -- --bind 10.0.0.5
+> curl -fsSL .../install.sh | bash -s -- --bind 127.0.0.1   # nur lokal (Proxy auf demselben Host)
+> curl -fsSL .../install.sh | bash -s -- --bind 10.0.0.5    # nur an einer konkreten internen IP
 > ```
 >
 > ⚠️ Der App-Port läuft im **Klartext** (kein TLS – das macht der Proxy). Docker umgeht oft die
-> Host-Firewall (UFW), daher: entweder an die konkrete interne IP binden **oder** den Port per
-> Firewall auf die Reverse-Proxy-IP beschränken.
+> Host-Firewall (UFW), daher bei `0.0.0.0`: entweder an eine konkrete interne IP binden **oder** den
+> Port per Firewall auf die Reverse-Proxy-IP beschränken.
 
 <details>
 <summary>Alternativ: manuell mit git clone + docker compose</summary>

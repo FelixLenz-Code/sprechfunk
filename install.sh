@@ -21,7 +21,7 @@ IMAGE="${SPRECHFUNK_IMAGE:-ghcr.io/felixlenz-code/sprechfunk}"
 TAG="${SPRECHFUNK_TAG:-latest}"
 DIR="${SPRECHFUNK_DIR:-/opt/sprechfunk}"
 HOST_PORT="${SPRECHFUNK_PORT:-8080}"
-BIND_ADDR="${SPRECHFUNK_BIND:-127.0.0.1}"
+BIND_ADDR="${SPRECHFUNK_BIND:-0.0.0.0}"
 PUBLIC_ORIGIN="${SPRECHFUNK_ORIGIN:-}"
 DO_START=1
 INSTALL_DOCKER=0
@@ -63,7 +63,8 @@ Optionen:
                       selbst über den Browser/Reverse-Proxy; rein informativ.
   --dir <pfad>        Installationsverzeichnis (Default: $DIR)
   --port <port>       Host-Port, an den gebunden wird (Default: $HOST_PORT)
-  --bind <addr>       Bind-Adresse (Default: $BIND_ADDR; 0.0.0.0 = alle Interfaces)
+  --bind <addr>       Bind-Adresse (Default: $BIND_ADDR = alle Interfaces;
+                      127.0.0.1 = nur lokal; oder konkrete interne IP)
   --tag <tag>         Image-Tag (Default: $TAG)
   --install-docker    Docker automatisch installieren, falls es fehlt (get.docker.com)
   --no-start          Nur einrichten/aktualisieren, Container nicht starten
@@ -256,7 +257,7 @@ services:
     volumes:
       - sprechfunk-data:/app/data
     ports:
-      - "${BIND_ADDR:-127.0.0.1}:${HOST_PORT:-8080}:8080"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
