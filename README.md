@@ -38,6 +38,33 @@ WebSocket-Verbindung.
 ## 🚀 Installation auf dem Server (Ein-Befehl)
 
 Voraussetzung: Docker mit Compose-Plugin und ein Reverse Proxy (Caddy/Nginx/Traefik) für HTTPS.
+(Fehlt Docker, installiert es der Installer auf Wunsch mit.)
+
+**Der Installer erledigt alles** – installieren **oder** aktualisieren (bei vorhandener Installation),
+Secrets erzeugen bzw. **beim Update erhalten**, Image ziehen, starten, Health-Check:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/FelixLenz-Code/sprechfunk/main/install.sh \
+  | bash -s -- --domain talk.example.com
+```
+
+Ohne Argumente fragt der Installer interaktiv nach der Domain. Weitere Optionen:
+
+```bash
+curl -fsSL .../install.sh | bash -s -- \
+  --domain talk.example.com \  # öffentliche URL (→ PUBLIC_ORIGIN)
+  --dir /opt/sprechfunk \      # Installationsverzeichnis
+  --port 8080 \                # Host-Port
+  --bind 127.0.0.1 \           # Bind-Adresse (0.0.0.0 = alle Interfaces)
+  --tag latest \               # Image-Tag
+  --install-docker             # Docker automatisch installieren, falls es fehlt
+```
+
+**Updaten** = denselben Befehl erneut ausführen. Die Secrets in `.env` bleiben dabei erhalten,
+nur das Image wird aktualisiert und der Container neu gestartet.
+
+<details>
+<summary>Alternativ: manuell mit git clone + docker compose</summary>
 
 ```bash
 # 1. Repo holen
@@ -48,12 +75,12 @@ cp .env.example .env
 sed -i "s|change-me-please-openssl-rand-hex-32|$(openssl rand -hex 32)|" .env
 sed -i "s|change-me-too-openssl-rand-hex-32|$(openssl rand -hex 32)|" .env
 
-# 3. Starten (zieht das von GitHub Actions gebaute Image aus der GHCR)
+# 3. PUBLIC_ORIGIN in .env auf deine Domain setzen, dann starten
 docker compose up -d
 ```
+</details>
 
-Danach lauscht die App auf `127.0.0.1:8080`. Setze in `.env` noch `PUBLIC_ORIGIN` auf deine Domain
-(z. B. `https://talk.example.com`).
+Danach lauscht die App auf `127.0.0.1:8080`.
 
 ### Reverse Proxy (Beispiel: Caddy)
 
@@ -92,6 +119,14 @@ server {
 > Für die PWA/Push-to-Talk ist ein gültiges TLS-Zertifikat also Pflicht.
 
 ### Updaten
+
+Installer erneut ausführen (empfohlen – Secrets bleiben erhalten):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/FelixLenz-Code/sprechfunk/main/install.sh | bash
+```
+
+Oder manuell im Installationsverzeichnis:
 
 ```bash
 docker compose pull && docker compose up -d
