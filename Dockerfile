@@ -1,5 +1,5 @@
 # ---------- Build stage ----------
-FROM node:20-bookworm-slim AS build
+FROM node:24.22.3-bookworm-slim AS build
 WORKDIR /app
 
 # Native build tools for better-sqlite3 / argon2
@@ -21,7 +21,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # ---------- Runtime stage ----------
-FROM node:20-bookworm-slim AS runtime
+FROM node:24.22.3-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080 \
